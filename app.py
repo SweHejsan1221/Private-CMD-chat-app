@@ -4,10 +4,12 @@ import random
 import string
 import os
 import sys
-from colorama import Fore, init
 
-# Initialize colorama for colored text
-init(autoreset=True)
+# Define ANSI escape codes for colors
+GREEN = '\033[92m'
+CYAN = '\033[96m'
+RED = '\033[91m'
+RESET = '\033[0m'
 
 # Global username variable
 username = "Guest"
@@ -26,33 +28,29 @@ def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(0)
     try:
-        # Try to connect to a public DNS to get the local machine's IP
-        s.connect(('10.254.254.254', 1))  
+        s.connect(('10.254.254.254', 1))  # Connect to a dummy external address
         ip = s.getsockname()[0]
     except Exception:
-        ip = '127.0.0.1'  # Fallback to localhost if no connection can be established
+        ip = '127.0.0.1'  # Fallback to localhost if no connection
     finally:
         s.close()
     return ip
 
 def start_server():
     global username
-    host = get_local_ip()  # Get the local IP address of the host machine
-    port = 0               # Let the OS choose an available port
+    host = get_local_ip()
+    port = 0
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((host, port))  # Binding to IP and port 0 will auto-choose a port
+    server.bind((host, port))
     server.listen(5)
-    
-    # Get the dynamically assigned port
+
     assigned_port = server.getsockname()[1]
-    
-    # Generate a random server code
     server_code = generate_server_code()
 
-    print(f"{Fore.GREEN}Server started! Share this code with friends to join:")
+    print(f"{GREEN}Server started! Share this code with friends to join:")
     print(f"Server Code: {server_code}")
-    print(f"Server IP Address: {host}")  # Display the server's local IP address
-    print(f"Server is running on port {assigned_port} (Use this port to connect)")
+    print(f"Server IP Address: {host}")
+    print(f"Server is running on port {assigned_port} (Use this port to connect){RESET}")
 
     clients = []
     usernames = {}
@@ -83,8 +81,8 @@ def start_server():
     def send_message_from_host():
         """Allows the host to send messages to all clients."""
         while True:
-            message = input(f"{Fore.CYAN}YourMessage (Host): ")
-            broadcast(f"{username} (Host): {message}", None)  # Send message from host
+            message = input(f"{CYAN}YourMessage (Host): {RESET}")
+            broadcast(f"{username} (Host): {message}", None)
 
     # Start a thread to let the host send messages
     host_message_thread = threading.Thread(target=send_message_from_host, daemon=True)
@@ -101,11 +99,11 @@ def start_server():
 def join_server():
     global username
     code = input("Enter the server code (format: celsium-XXXXXXX): ")
-    host = input("Enter the server's IP address: ")  # The IP address of the server
-    port = int(input("Enter the server's port: "))   # The dynamically chosen port
+    host = input("Enter the server's IP address: ")
+    port = int(input("Enter the server's port: "))
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((host, port))
-    print(f"{Fore.GREEN}Connected to the server! Type your messages below:")
+    print(f"{GREEN}Connected to the server! Type your messages below:{RESET}")
 
     # Send username to the server
     client.send(f"USERNAME:{username}".encode('utf-8'))
@@ -115,10 +113,9 @@ def join_server():
         while True:
             try:
                 message = client.recv(1024).decode('utf-8')
-                # Clear the line and print new message
-                print(f"\r{Fore.GREEN}{message}\nYou: ", end="")
+                print(f"\r{GREEN}{message}{RESET}\nYou: ", end="")
             except:
-                print(f"{Fore.RED}Disconnected from the server!")
+                print(f"{RED}Disconnected from the server!{RESET}")
                 client.close()
                 break
 
@@ -128,18 +125,18 @@ def join_server():
 
     while True:
         message = input("")  # Read user input
-        print(f"{Fore.CYAN}YourMessage: {message}")  # Display own message
+        print(f"{CYAN}YourMessage: {message}{RESET}")
         client.send(message.encode('utf-8'))
 
 def set_username():
     global username
     username = input("Enter your desired username: ")
-    print(f"Username set to: {Fore.GREEN}{username}")
-    main()  # Return to the main menu after setting the username
+    print(f"Username set to: {GREEN}{username}{RESET}")
+    main()
 
 def main():
     clear_console()
-    print("Welcome to Update 1.0")
+    print("Welcome to CMD Chat App!")
     print("1. Host a server")
     print("2. Join a server")
     print("3. Set your username")
@@ -156,7 +153,7 @@ def main():
         print("Exiting... Goodbye!")
         sys.exit()
     else:
-        print(f"{Fore.RED}Invalid choice! Try again.")
+        print(f"{RED}Invalid choice! Try again.{RESET}")
         main()
 
 if __name__ == "__main__":
